@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.3.1/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.3.1/dist/leaflet.js"></script>
+    <script src="/node_modules/plotty/dist/plotty.min.js"></script>
+    <script src="https://unpkg.com/georaster-layer-for-leaflet/dist/georaster-layer-for-leaflet.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/geotiff"></script>
+    <script src="https://unpkg.com/georaster"></script>
+    <link rel="stylesheet" href="style.css">
+    <title>Datos sobre el covid-19 en Costa Rica</title>
+</head>
+<body>
+    <h1>Costa Rica y el Covid-19</h1>
+    
+    <div>
+        <h2>Areas con mayor y menor cantidad de afectados</h2>
+        <div id="map" style="height: 75vh; width: 125vh;"></div>
+    </div>
+
+    <div>
+        <h2>Areas con mayor y menor cantidad de fallecidos</h2>
+        <div id="mapF" style="height: 75vh; width: 125vh;"></div>
+    </div>
+    <script>
+        var map = L.map('map').setView([9.849591, -83.903129], 13);
+        console.log(map)
+        L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        }).addTo(map);
+
+        fetch("geoTiff.tif")
+            .then(response => response.arrayBuffer())
+            .then(arrayBuffer => {
+                parseGeoraster(arrayBuffer).then(georaster => {
+                console.log("georaster:", georaster);
+
+        var layer = new GeoRasterLayer({
+            georaster: georaster,
+            opacity: 0.5,
+            pixelValuesToColorFn: values => {
+    // Asigna colores basados en el valor del píxel
+                if (values[0] < 50) return '#ff0000'; // Rojo para valores menores a 50
+                else if (values[0] < 100) return '#00ff00'; // Verde para valores entre 50 y 100
+                else if (values[0] < 150) return '#0000ff'; // Azul para valores entre 100 y 150
+                else return '#f0f0f0'; // Claro para valores mayores a 150
+        },
+            resolution: 64 // optional parameter for adjusting display resolution
+        });
+        layer.addTo(map);
+
+        map.fitBounds(layer.getBounds());
+                });
+            });
+    </script>
+
+<script>
+    var mapF = L.map('mapF').setView([9.849591, -83.903129], 13);
+    console.log(mapF)
+    L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+    }).addTo(mapF);
+
+    fetch("geoTiffF.tif")
+        .then(response => response.arrayBuffer())
+        .then(arrayBuffer => {
+            parseGeoraster(arrayBuffer).then(georaster => {
+            console.log("georaster:", georaster);
+
+    var layer = new GeoRasterLayer({
+        georaster: georaster,
+        opacity: 0.5,
+        pixelValuesToColorFn: values => {
+// Asigna colores basados en el valor del píxel
+            if (values[0] < 50) return '#ff0000';
+            else if (values[0] < 100) return '#00ff00';
+            else if (values[0] < 150) return '#0000ff';
+            else return '#f0f0f0';
+    },
+        resolution: 64 // optional parameter for adjusting display resolution
+    });
+    layer.addTo(mapF);
+
+    mapF.fitBounds(layer.getBounds());
+            });
+        });
+</script>
+</body>
+</html>
